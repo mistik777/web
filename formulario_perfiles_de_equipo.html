@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Perfiles de equipo ACBR – Formulario</title>
+  <style>
+    :root{
+      --bg: #0b1020;
+      --card: #10172a;
+      --muted: #a3b1c6;
+      --text: #e8eef7;
+      --brand: #6aa5ff;
+      --brand-2: #7ef0d9;
+      --danger: #ff6b6b;
+      --ok: #56e39f;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji";
+      background: radial-gradient(1200px 800px at 10% -10%, #122041 0%, #0b1020 50%, #090d1a 100%);
+      color:var(--text);
+    }
+    .wrap{max-width:1100px; margin:40px auto; padding:0 16px}
+    header{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:22px}
+    .title{font-size: clamp(1.4rem, 1rem + 2vw, 2.2rem); font-weight:800; letter-spacing:.2px}
+    .subtitle{color:var(--muted); font-size:.98rem}
+    .badge{display:inline-flex; align-items:center; gap:8px; font-weight:800; padding:8px 12px; border-radius:999px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1)}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,.06), transparent 20%) , var(--card); border:1px solid rgba(255,255,255,.08); box-shadow:var(--shadow); padding:22px; border-radius:var(--radius)}
+    .grid{display:grid; gap:16px}
+    @media(min-width:900px){.grid{grid-template-columns:1.1fr 1fr}}
+
+    /* Inputs */
+    .row{display:grid; grid-template-columns:1fr auto; align-items:center; gap:12px; padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.03)}
+    .row:hover{border-color:rgba(255,255,255,.18)}
+    label strong{display:block; font-size:1rem}
+    label small{color:var(--muted)}
+    .scale{display:flex; gap:8px}
+    .scale input{display:none}
+    .chip{user-select:none; cursor:pointer; min-width:38px; text-align:center; padding:8px 10px; border-radius:12px; border:1px solid rgba(255,255,255,.14); color:var(--muted); background:rgba(255,255,255,.02); transition:.2s ease}
+    .chip:hover{transform: translateY(-1px); border-color:rgba(255,255,255,.28); color:#fff}
+    .scale input:checked + .chip{background:linear-gradient(180deg, var(--brand), var(--brand-2)); color:#0a1020; font-weight:700; border-color:transparent}
+
+    .actions{display:flex; flex-wrap:wrap; gap:10px; margin-top:18px}
+    .btn{appearance:none; border:none; cursor:pointer; padding:12px 16px; border-radius:12px; font-weight:700; letter-spacing:.2px}
+    .btn-primary{background:linear-gradient(180deg, var(--brand), var(--brand-2)); color:#0a1020}
+    .btn-ghost{background:transparent; border:1px solid rgba(255,255,255,.15); color:var(--text)}
+    .btn-danger{background:linear-gradient(180deg, #ff9a9a, var(--danger)); color:#0a1020}
+
+    /* Result */
+    .result{margin-top:18px; display:grid; gap:16px}
+    .bars{display:grid; gap:10px}
+    .bar{display:grid; grid-template-columns:160px 1fr 54px; align-items:center; gap:12px}
+    .track{height:12px; background:rgba(255,255,255,.08); border-radius:999px; overflow:hidden; border:1px solid rgba(255,255,255,.12)}
+    .fill{height:100%; width:0%; background:linear-gradient(90deg, var(--brand), var(--brand-2)); transition: width .4s ease}
+    .hint{color:var(--muted)}
+
+    /* Table list */
+    .table-wrap{margin-top:24px}
+    table{width:100%; border-collapse:separate; border-spacing:0; min-width:600px}
+    th, td{padding:12px 14px; border-bottom:1px solid rgba(255,255,255,.08)}
+    thead th{position:sticky; top:0; background:rgba(16,23,42,.92); backdrop-filter: blur(6px)}
+    tbody tr:hover{background:rgba(255,255,255,.03)}
+
+    .footer{margin:28px 0; color:var(--muted); font-size:.9rem}
+    @media print{
+      body{background:#fff; color:#000}
+      .card{box-shadow:none; border-color:#ddd}
+      .btn, header .subtitle{display:none}
+      .row{border:1px solid #ccc; background:#fff}
+      .chip{border-color:#666}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <div class="title">Al trabajar en equipo...</div>
+        <div class="subtitle">Marca del <strong>1</strong> (nunca) al <strong>5</strong> (siempre) cada pregunta.</em>.</div>
+      </div>
+      <div class="badge">ACBR</div>
+    </header>
+
+    <section class="card">
+      <form id="formPerfil">
+        <div class="row">
+          <label><strong>Nombre del alumno/a</strong></label>
+          <input id="nombre" name="nombre" type="text" placeholder="" required style="padding:5px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.18); background:rgba(255,255,255,.05); color:var(--text); min-width:260px">
+        </div>
+      
+
+        <div id="items"></div>
+  <br />
+        
+          <button class="btn btn-primary" type="button" id="btnCalcular">Calcular perfil</button>
+          <button class="btn btn-ghost" type="button" id="btnReset">Limpiar</button>
+          <button class="btn btn-ghost" type="button" id="btnImprimir">Imprimir</button>
+          <button class="btn btn-ghost" type="button" id="btnAñadir">Añadir a la lista</button>
+          <button class="btn btn-danger" type="button" id="btnExport">Exportar lista (CSV)</button>
+        
+
+      <div class="result" id="resultado" hidden>
+        <div>
+          <span class="badge" id="badgePrincipal">Rol principal: —</span>
+          <span class="badge" id="badgeSecundario">Rol secundario: —</span>
+        </div>
+        <div class="bars" id="barras"></div>
+        <div class="hint" id="explicacion"></div>
+      </div>
+    </section>
+
+    <div class="table-wrap card" style="overflow:auto">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:6px">
+        <h3 style="margin:0">Lista de clase (perfiles detectados)</h3>
+        <button class="btn btn-ghost" type="button" id="btnLimpiarTabla">Vaciar lista</button>
+      </div>
+      <table id="tabla">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Organizador</th>
+            <th>Creativo</th>
+            <th>Ejecutor</th>
+            <th>Empático</th>
+            <th>Comunicador</th>
+            <th>Principal</th>
+            <th>Secundario</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="hint" style="margin-top:10px">Puedes ir añadiendo estudiantes y exportar la lista a CSV para importarla en tu hoja de cálculo.</div>
+    </div>
+
+    <details class="card" style="margin-top:20px">
+      <summary style="cursor:pointer; font-weight:700">Ver roles y mapeo de ítems</summary>
+      <ul class="hint" style="line-height:1.7; margin-top:10px">
+        <li><strong>Organizador/Líder</strong> → Ítems 1 y 5</li>
+        <li><strong>Creativo/Técnico</strong> → Ítems 2 y 6</li>
+        <li><strong>Ejecutor</strong> → Ítems 3 y 9</li>
+        <li><strong>Empático/Apoyo</strong> → Ítems 4 y 8</li>
+        <li><strong>Comunicador/Motivador</strong> → Ítems 7 y 10</li>
+      </ul>
+    </details>
+  </div>
+
+  <script>
+    const ITEMS = [
+      {n:1, t:"Me gusta organizar las tareas y vigilar plazos.", role:"Organizador/Líder"},
+      {n:2, t:"Suelo proponer ideas nuevas y diferentes.", role:"Creativo/Técnico"},
+      {n:3, t:"Prefiero seguir instrucciones claras antes que improvisar.", role:"Ejecutor"},
+      {n:4, t:"Soy empático/a: escucho y apoyo a mis compañeros.", role:"Empático/Apoyo"},
+      {n:5, t:"Me siento cómodo/a asumiendo el liderazgo y tomando decisiones.", role:"Organizador/Líder"},
+      {n:6, t:"Disfruto resolviendo problemas técnicos y buscando soluciones prácticas.", role:"Creativo/Técnico"},
+      {n:7, t:"Me gusta comunicar resultados a los demás (presentar, explicar).", role:"Comunicador/Motivador"},
+      {n:8, t:"Intento evitar conflictos y mantener buen clima en el grupo.", role:"Empático/Apoyo"},
+      {n:9, t:"Me esfuerzo en terminar mi parte del trabajo con calidad.", role:"Ejecutor"},
+      {n:10, t:"Me gusta animar y motivar al grupo cuando decae.", role:"Comunicador/Motivador"},
+    ];
+
+    const ROLES = ["Organizador/Líder","Creativo/Técnico","Ejecutor","Empático/Apoyo","Comunicador/Motivador"];   
+
+    // Render dinámico de ítems sin prefijo "Ítem" ni etiqueta de rol
+    const itemsRoot = document.getElementById('items');
+    ITEMS.forEach(({n,t})=>{
+      const row = document.createElement('div');
+      row.className = 'row';
+      const label = document.createElement('label');
+      label.innerHTML = `<strong>${t}</strong>`;
+      const scale = document.createElement('div');
+      scale.className = 'scale';
+      for(let v=1; v<=5; v++){
+        const id=`i${n}-${v}`;
+        scale.insertAdjacentHTML('beforeend', `
+          <input type="radio" id="${id}" name="i${n}" value="${v}">
+          <label class="chip" for="${id}">${v}</label>
+        `);
+      }
+      row.appendChild(label); row.appendChild(scale); itemsRoot.appendChild(row);
+    });
+
+    // --- Lógica completa ---
+    const nombre = document.getElementById('nombre');
+    const btnCalc = document.getElementById('btnCalcular');
+    const btnReset = document.getElementById('btnReset');
+    const btnPrint = document.getElementById('btnImprimir');
+    const btnAdd = document.getElementById('btnAñadir');
+    const btnExport = document.getElementById('btnExport');
+    const btnClearTable = document.getElementById('btnLimpiarTabla');
+
+    const resBox = document.getElementById('resultado');
+    const badgeP = document.getElementById('badgePrincipal');
+    const badgeS = document.getElementById('badgeSecundario');
+    const bars = document.getElementById('barras');
+    const expl = document.getElementById('explicacion');
+
+    const tableBody = document.querySelector('#tabla tbody');
+    const classList = []; // acumulador para exportar CSV
+
+    function readValues(){
+      const values = {};
+      for(const it of ITEMS){
+        const v = document.querySelector(`input[name=i${it.n}]:checked`);
+        values[`i${it.n}`] = v ? parseInt(v.value,10) : null;
+      }
+      return values;
+    }
+
+    function compute(values){
+      const missing = Object.values(values).filter(v=>v===null).length;
+      if(!nombre.value.trim()) throw new Error('Introduce el nombre.');
+      if(missing>0) throw new Error('Responde a los 10 ítems (1–5).');
+
+      const sums = {
+        "Organizador/Líder": (values.i1||0) + (values.i5||0),
+        "Creativo/Técnico": (values.i2||0) + (values.i6||0),
+        "Ejecutor": (values.i3||0) + (values.i9||0),
+        "Empático/Apoyo": (values.i4||0) + (values.i8||0),
+        "Comunicador/Motivador": (values.i7||0) + (values.i10||0),
+      };
+
+      const sorted = Object.entries(sums).sort((a,b)=>b[1]-a[1]);
+      const max = sorted[0][1];
+      const principal = sorted.filter(([_,v])=>v===max).map(([k])=>k);
+      const secondEntry = sorted.find(([_,v])=>v<max);
+      const secondVal = secondEntry ? secondEntry[1] : max; // si todo empata
+      const secundario = sorted.filter(([_,v])=>v===secondVal).map(([k])=>k);
+
+      return {sums, principal, secundario};
+    }
+
+    function renderResult({sums, principal, secundario}){
+      resBox.hidden = false;
+      badgeP.textContent = `Rol principal: ${principal.join(' / ')}`;
+      badgeS.textContent = `Rol secundario: ${secundario.join(' / ')}`;
+
+      bars.innerHTML = '';
+      for(const r of ROLES){
+        const pct = Math.round((sums[r]/10)*100);
+        const row = document.createElement('div');
+        row.className = 'bar';
+        row.innerHTML = `
+          <div>${r}</div>
+          <div class="track"><div class="fill" style="width:${pct}%"></div></div>
+          <div style="text-align:right">${sums[r]} / 10</div>`;
+        bars.appendChild(row);
+      }
+
+      const hints = {
+        "Organizador/Líder":"Planifica, reparte, toma decisiones y cuida plazos.",
+        "Creativo/Técnico":"Aporta ideas y soluciona problemas prácticos.",
+        "Ejecutor":"Sigue estándares y asegura la entrega con calidad.",
+        "Empático/Apoyo":"Cuida el clima, escucha y facilita el acuerdo.",
+        "Comunicador/Motivador":"Explica, presenta y anima al equipo.",
+      };
+      const explP = principal.map(r=>`<strong>${r}</strong>: ${hints[r]}`).join('<br>');
+      const explS = secundario.map(r=>`<strong>${r}</strong>: ${hints[r]}`).join('<br>');
+      expl.innerHTML = `<div><u>Fortalezas principales</u><br>${explP}</div>${secundario.length?`<div style=\"margin-top:6px\"><u>Apoyos secundarios</u><br>${explS}</div>`:''}`;
+    }
+
+    btnCalc.addEventListener('click', ()=>{
+      try{
+        const values = readValues();
+        const result = compute(values);
+        renderResult(result);
+      }catch(err){
+        alert(err.message);
+      }
+    });
+
+    btnReset.addEventListener('click', ()=>{
+      document.getElementById('formPerfil').reset();
+      document.getElementById('resultado').hidden = true;
+    });
+
+    btnPrint.addEventListener('click', ()=> window.print());
+
+    btnAdd.addEventListener('click', ()=>{
+      try{
+        const values = readValues();
+        const {sums, principal, secundario} = compute(values);
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${escapeHtml(nombre.value)}</td>
+          <td>${sums["Organizador/Líder"]}</td>
+          <td>${sums["Creativo/Técnico"]}</td>
+          <td>${sums["Ejecutor"]}</td>
+          <td>${sums["Empático/Apoyo"]}</td>
+          <td>${sums["Comunicador/Motivador"]}</td>
+          <td>${principal.join(' / ')}</td>
+          <td>${secundario.join(' / ')}</td>`;
+        tableBody.appendChild(row);
+        classList.push({
+          Nombre: nombre.value,
+          Organizador: sums["Organizador/Líder"],
+          Creativo: sums["Creativo/Técnico"],
+          Ejecutor: sums["Ejecutor"],
+          Empatico: sums["Empático/Apoyo"],
+          Comunicador: sums["Comunicador/Motivador"],
+          Principal: principal.join(' / '),
+          Secundario: secundario.join(' / '),
+        });
+      }catch(err){ alert(err.message); }
+    });
+
+    btnExport.addEventListener('click', ()=>{
+      if(classList.length===0){ alert('La lista está vacía. Añade al menos un estudiante.'); return; }
+      const headers = Object.keys(classList[0]);
+      const rows = [headers.join(';')].concat(classList.map(obj=> headers.map(h=>escapeCsv(String(obj[h]??''))).join(';')));
+      const blob = new Blob(["﻿"+rows.join('\n')], {type:'text/csv;charset=utf-8;'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'Perfiles_ACBR.csv';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    btnClearTable.addEventListener('click', ()=>{
+      if(confirm('¿Vaciar la lista de clase?')){
+        tableBody.innerHTML = '';
+        classList.length = 0;
+      }
+    });
+
+    function escapeHtml(s){
+      return s.replace(/[&<>\"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+    }
+    function escapeCsv(s){
+      if(s.includes(';')||s.includes('"')||s.includes('\n')) return '"'+s.replace(/"/g,'""')+'"';
+      return s;
+    }
+  </script>
+</body>
+</html>
