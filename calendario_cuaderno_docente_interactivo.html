@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GENERADOR Calendario - Cuaderno Docente Interactivo</title>
+  <style>
+    :root{--bg:#0b1020;--card:#121833;--ink:#e6ecff;--muted:#9aa6cb;--accent:#5aa9ff;--accent2:#7cf6b8;--warn:#ffb454;--danger:#ff6b6b}
+    html,body{margin:0;height:100%;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Inter,Helvetica,Arial,sans-serif;background:linear-gradient(180deg,#0b1020,#0b1328 30%,#0d1533 100%);color:var(--ink)}
+    .wrap{max-width:1100px;margin:24px auto;padding:0 16px}
+    .grid{display:grid;gap:16px}
+    .grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+    @media(max-width:900px){.grid.cols-2{grid-template-columns:1fr}}
+    .card{background:linear-gradient(180deg,#101737 0%, #0e1430 100%);border:1px solid #1f2853;border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.45);padding:18px}
+    h1{font-size:clamp(20px,3.2vw,30px);margin:0 0 10px;letter-spacing:.2px}
+    h2{font-size:18px;margin:0 0 8px;color:var(--accent)}
+    label{display:block;font-size:14px;color:var(--muted);margin:8px 0 6px}
+    input,select,button,textarea{background:#0c122b;color:var(--ink);border:1px solid #223066;border-radius:12px;padding:10px 12px;font-size:14px;outline:none}
+    input[type="date"], input[type="time"]{padding:8px 10px}
+    button{cursor:pointer;transition:.2s;border-color:#2c3a73}
+    button:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,.3)}
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px}
+    .btn.primary{background:linear-gradient(90deg,#3b82f6,#22d3ee);border:none;color:#091022;font-weight:600}
+    .btn.ghost{background:transparent}
+    .btn.warn{background:linear-gradient(90deg,#ffb454,#ff7a7a);border:none;color:#091022;font-weight:600}
+    .list{display:flex;flex-wrap:wrap;gap:8px}
+    .chip{display:inline-flex;align-items:center;gap:6px;background:#0c142f;border:1px solid #283773;color:#cfe1ff;padding:6px 10px;border-radius:999px;font-size:12px}
+    .chip button{border:none;background:transparent;color:#96a7dd;padding:0 4px;cursor:pointer}
+    table{width:100%;border-collapse:separate;border-spacing:0 6px}
+    thead th{position:sticky;top:0;background:#101737;z-index:2}
+    th,td{padding:10px 12px;text-align:left;font-size:13px;border-top:1px solid #263368;border-bottom:1px solid #1a244f}
+    tbody tr{background:linear-gradient(180deg,#0e1430,#0c1128)}
+    tbody tr.holiday{background:linear-gradient(180deg,#21131c,#1b0f17)}
+    .muted{color:var(--muted)}
+    .row{display:flex;gap:8px;flex-wrap:wrap}
+    .row > *{flex:1 1 160px}
+    .right{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+    .note{font-size:16px;color:#fff134}
+    .hr{height:1px;background:#1b244b;margin:14px 0}
+    .kbd{font-family:ui-monospace,Menlo,Consolas,monospace;background:#0a0f22;border:1px solid #253160;padding:2px 6px;border-radius:6px;color:#cfe1ff}
+    .test-pass{color:#7cf6b8}
+    .test-fail{color:#ff6b6b}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>GENERADOR Calendario - Cuaderno del Docente Interactivo</h1>
+    <div class="card">
+      <p class="note">Esta web te permite crear una hoja de cálculo que te puede servir como "Cuaderno Docente". Sigue los pasos. El calendario final se verá aquí mismo (HTML) y podrás descargarlo como <span class="kbd">.xlsx</span> o <span class="kbd">.csv</span>.</p>
+      <div class="hr"></div>
+      <div class="grid cols-2">
+        <!-- Paso 1 y 2: Rango de curso -->
+        <div class="card">
+          <h2>1) Fechas del curso</h2>
+          <label>Fecha de inicio</label>
+          <input type="date" id="inicio" />
+          <label>Fecha de fin</label>
+          <input type="date" id="fin" />
+        </div>
+        <!-- Paso 3: Festivos -->
+        <div class="card">
+          <h2>2) Festivos</h2>
+          <div class="row">
+            <div style="display:flex;gap:8px;flex:2 1 260px;flex-wrap:wrap">
+              <div style="flex:1 1 160px"><label>Inicio</label><input type="date" id="festivoInicio" /></div>
+              <div style="flex:1 1 160px"><label>Fin (opcional)</label><input type="date" id="festivoFin" /></div>
+            </div>
+            <input type="text" id="festivoMotivo" placeholder="Motivo (opcional)" />
+            <button class="btn" id="addFestivo">Añadir festivo(s)</button>
+          </div>
+          <div class="list" id="festivosList"></div>
+          <p class="note" style="margin-top:8px">Indica una fecha de inicio y, si quieres, una de fin: se marcarán como festivos todos los días entre medias (ambos inclusive).</p>
+        </div>
+        <!-- Paso 3b: Evaluaciones -->
+        <div class="card">
+          <h2>3) Evaluaciones</h2>
+          <div class="row">
+            <input type="date" id="evalFecha" />
+            <input type="text" id="evalDesc" placeholder="Descripción (p. ej. 1ª Eval 1ºCFGM)" />
+            <label style="align-self:center;flex:0 0 auto"><input type="checkbox" id="evalBloquea" /> Bloquea sesiones ese día</label>
+            <button class="btn" id="addEval">Añadir evaluación</button>
+          </div>
+          <div class="list" id="evalsList"></div>
+          <p class="note" style="margin-top:8px">Si marcas "Bloquea", no se generan clases ese día. En cualquier caso, la evaluación aparecerá como evento en el calendario.</p>
+        </div>
+        <!-- Paso 4: Módulos semanales -->
+        <div class="card" style="grid-column:1 / -1">
+          <h2>4) Módulos, día y horas (semanal)</h2>
+          <div class="row">
+            <input type="text" id="moduloNombre" placeholder="Nombre del módulo (p. ej. SORE 0224)" />
+            <select id="moduloDia">
+              <option value="1">Lunes</option>
+              <option value="2">Martes</option>
+              <option value="3">Miércoles</option>
+              <option value="4">Jueves</option>
+              <option value="5">Viernes</option>
+              <option value="6">Sábado</option>
+              <option value="0">Domingo</option>
+            </select>
+            <input type="time" id="moduloInicio" value="08:00" />
+            <input type="time" id="moduloFin" value="10:00" />
+            <button class="btn" id="addModulo">Añadir módulo</button>
+          </div>
+          <div class="list" id="modulosList"></div>
+          <p class="note" style="margin-top:8px">Añade tantas franjas como necesites. Se repetirán semanalmente entre inicio y fin de curso, excluyendo festivos y (si lo indicas) evaluaciones bloqueantes.</p>
+        </div>
+      </div>
+      <div class="right" style="margin-top:8px">
+        <button class="btn ghost" id="limpiarTodo">Limpiar</button>
+        <button class="btn primary" id="generar">Generar calendario</button>
+      </div>
+    </div>
+
+    <div id="salida" class="card" style="margin-top:16px;display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+        <h2>Calendario generado</h2>
+        <div class="right">
+          <button class="btn" id="descargarXLSX">Descargar .xlsx (recomendado)</button>
+          <button class="btn" id="descargarCSV">Descargar .csv</button>
+          <button class="btn ghost" id="copiarHTML">Copiar HTML</button>
+        </div>
+      </div>
+      <div class="hr"></div>
+      <div id="meta" class="muted" style="margin-bottom:10px"></div>
+      <div style="overflow:auto;max-height:60vh;border:1px solid #202a5a;border-radius:12px;padding:6px">
+        <table id="tabla">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Día</th>
+              <th>Módulo</th>
+              <th>Inicio</th>
+              <th>Fin</th>
+              <th>Horas</th>
+              <th>Observaciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="note" style="margin-top:8px">Exporta a <strong>.xlsx</strong> (funciona sin Internet) o <strong>.csv</strong>.</p>
+    </div>
+
+    <!-- <div class="card" style="margin-top:16px">
+      <h2>Pruebas rápidas</h2>
+      <div class="right" style="margin-bottom:8px"><button class="btn" id="runTests">Ejecutar pruebas</button></div>
+      <ul id="testResults" class="muted" style="margin:0;padding-left:18px"></ul>
+    </div> 
+    -->
+  </div>
+
+<script>
+  // ======= Utilidades =======
+  const byId = (id)=>document.getElementById(id)
+  const DIAS = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado']
+
+  function fmtDate(d){
+    const dd = String(d.getDate()).padStart(2,'0')
+    const mm = String(d.getMonth()+1).padStart(2,'0')
+    const yy = d.getFullYear()
+    return `${dd}/${mm}/${yy}`
+  }
+  function isoDate(d){
+    const dd = String(d.getDate()).padStart(2,'0')
+    const mm = String(d.getMonth()+1).padStart(2,'0')
+    const yy = d.getFullYear()
+    return `${yy}-${mm}-${dd}`
+  }
+  function parseHM(hm){
+    const [h,m] = hm.split(':').map(Number)
+    return h*60+m
+  }
+  function horasEntre(hm1,hm2){
+    const diffMin = parseHM(hm2)-parseHM(hm1)
+    return (diffMin/60)
+  }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]))
+  }
+
+  // ======= Elementos =======
+  const inicioEl = byId('inicio')
+  const finEl = byId('fin')
+  // Festivos
+  const festivoInicioEl = byId('festivoInicio')
+  const festivoFinEl = byId('festivoFin')
+  const festivoMotivoEl = byId('festivoMotivo')
+  const addFestivoBtn = byId('addFestivo')
+  const festivosList = byId('festivosList')
+  // Evaluaciones
+  const evalFechaEl = byId('evalFecha')
+  const evalDescEl = byId('evalDesc')
+  const evalBloqueaEl = byId('evalBloquea')
+  const addEvalBtn = byId('addEval')
+  const evalsList = byId('evalsList')
+  // Módulos
+  const moduloNombreEl = byId('moduloNombre')
+  const moduloDiaEl = byId('moduloDia')
+  const moduloInicioEl = byId('moduloInicio')
+  const moduloFinEl = byId('moduloFin')
+  const addModuloBtn = byId('addModulo')
+  const modulosList = byId('modulosList')
+  // Salida
+  const generarBtn = byId('generar')
+  const limpiarBtn = byId('limpiarTodo')
+  const salida = byId('salida')
+  const tabla = byId('tabla')
+  const tbody = tabla.querySelector('tbody')
+  const meta = byId('meta')
+  const descargarXLSXBtn = byId('descargarXLSX')
+  const descargarCSVBtn = byId('descargarCSV')
+  const copiarHTMLBtn = byId('copiarHTML')
+  const runTestsBtn = byId('runTests')
+  const testResults = byId('testResults')
+
+  // ======= Datos =======
+  const festivos = new Map()
+  const evaluaciones = new Map()
+  const modulos = []
+
+  // ======= Chips =======
+  function renderFestivos(){
+    festivosList.innerHTML = ''
+    Array.from(festivos.entries()).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([iso,motivo])=>{
+      const chip = document.createElement('span')
+      chip.className = 'chip'
+      chip.innerHTML = `<span>🎌 ${iso} ${motivo?('· '+escapeHtml(motivo)):''}</span>`
+      const x = document.createElement('button')
+      x.textContent = '✕'
+      x.title = 'Quitar'
+      x.onclick = ()=>{ festivos.delete(iso); renderFestivos() }
+      chip.appendChild(x)
+      festivosList.appendChild(chip)
+    })
+  }
+  function renderEvals(){
+    evalsList.innerHTML = ''
+    Array.from(evaluaciones.entries()).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([iso,info])=>{
+      const chip = document.createElement('span')
+      chip.className = 'chip'
+      chip.innerHTML = `📝 ${iso} · ${escapeHtml(info.desc||'Evaluación')} ${info.bloquea?'· Bloquea':''}`
+      const x = document.createElement('button')
+      x.textContent = '✕'
+      x.title = 'Quitar'
+      x.onclick = ()=>{ evaluaciones.delete(iso); renderEvals() }
+      chip.appendChild(x)
+      evalsList.appendChild(chip)
+    })
+  }
+  function renderModulos(){
+    modulosList.innerHTML = ''
+    modulos.forEach((m,idx)=>{
+      const chip = document.createElement('span')
+      chip.className = 'chip'
+      chip.innerHTML = `📘 <strong>${escapeHtml(m.nombre)}</strong> · ${DIAS[m.dow]} · ${m.inicio}–${m.fin}`
+      const x = document.createElement('button')
+      x.textContent = '✕'
+      x.title = 'Quitar'
+      x.onclick = ()=>{ modulos.splice(idx,1); renderModulos() }
+      chip.appendChild(x)
+      modulosList.appendChild(chip)
+    })
+  }
+
+  // ======= Eventos UI =======
+  addFestivoBtn.onclick = ()=>{
+    const fIni = festivoInicioEl.value
+    const fFin = festivoFinEl.value || fIni
+    if(!fIni) return alert('Añade al menos la fecha de inicio')
+    const dIni = new Date(fIni+'T00:00:00')
+    const dFin = new Date(fFin+'T00:00:00')
+    if(dFin < dIni) return alert('La fecha fin debe ser posterior o igual a inicio')
+    const motivo = festivoMotivoEl.value||''
+    const oneDay = 24*60*60*1000
+    for(let t=dIni.getTime(); t<=dFin.getTime(); t+=oneDay){
+      festivos.set(isoDate(new Date(t)), motivo)
+    }
+    festivoInicioEl.value = ''
+    festivoFinEl.value = ''
+    festivoMotivoEl.value = ''
+    renderFestivos()
+  }
+  addEvalBtn.onclick = ()=>{
+    const f = evalFechaEl.value
+    if(!f) return alert('Añade la fecha de la evaluación')
+    evaluaciones.set(f, {desc: evalDescEl.value||'Evaluación', bloquea: !!evalBloqueaEl.checked})
+    evalFechaEl.value = ''
+    evalDescEl.value = ''
+    evalBloqueaEl.checked = false
+    renderEvals()
+  }
+  addModuloBtn.onclick = ()=>{
+    const nombre = moduloNombreEl.value.trim()
+    const dow = Number(moduloDiaEl.value)
+    const ini = moduloInicioEl.value
+    const fin = moduloFinEl.value
+    if(!nombre) return alert('Indica el nombre del módulo')
+    if(!ini || !fin) return alert('Indica horas de inicio y fin')
+    if(parseHM(fin) <= parseHM(ini)) return alert('La hora de fin debe ser posterior a la de inicio')
+    modulos.push({nombre,dow,inicio:ini,fin})
+    moduloNombreEl.value = ''
+    renderModulos()
+  }
+  limpiarBtn.onclick = ()=>{
+    if(!confirm('¿Vaciar todo?')) return
+    inicioEl.value = ''
+    finEl.value = ''
+    festivos.clear(); renderFestivos()
+    evaluaciones.clear(); renderEvals()
+    modulos.splice(0); renderModulos()
+    tbody.innerHTML = ''
+    salida.style.display = 'none'
+  }
+
+  // ======= Núcleo (función pura) =======
+  function generateRows(dIni, dFin, festivosMap, evalsMap, modulosArr){
+    const rows = []
+    const oneDay = 24*60*60*1000
+    let stats = {totEval:0, totSes:0, totalHoras:0, countFestivos:0, diasTotales:0}
+    for(let t=dIni.getTime(); t<=dFin.getTime(); t+=oneDay){
+      const d = new Date(t)
+      const iso = isoDate(d)
+      const dia = DIAS[d.getDay()]
+      const isFestivo = festivosMap.has(iso)
+      if(isFestivo) stats.countFestivos++
+      const evalInfo = evalsMap.get(iso)
+      const isEvalBloq = !!(evalInfo && evalInfo.bloquea)
+      if(evalInfo){ rows.push({ tipo:'eval', iso, fecha: fmtDate(d), dia, modulo:'—', inicio:'—', fin:'—', horas:'', obs:`Evaluación: ${evalInfo.desc||''}` }); stats.totEval++ }
+      const todaysSessions = []
+      if(!isFestivo && !isEvalBloq){
+        modulosArr.forEach(m=>{
+          if(m.dow === d.getDay()){
+            const horas = horasEntre(m.inicio,m.fin)
+            todaysSessions.push({ tipo:'clase', iso, fecha: fmtDate(d), dia, modulo:m.nombre, inicio:m.inicio, fin:m.fin, horas:+horas.toFixed(2), obs:'' })
+          }
+        })
+      }
+      if(todaysSessions.length){ todaysSessions.forEach(r=>{ rows.push(r); stats.totSes++; stats.totalHoras += r.horas }) }
+      else { if(!evalInfo){ let obs=''; let tipo='vacio'; if(isFestivo){ tipo='festivo'; obs='Festivo'+(festivosMap.get(iso)?`: ${festivosMap.get(iso)}`:'') } rows.push({ tipo, iso, fecha: fmtDate(d), dia, modulo:'—', inicio:'—', fin:'—', horas:'', obs }) } }
+      stats.diasTotales++
+    }
+    return {rows, stats}
+  }
+
+  // ======= Generar y pintar =======
+  generarBtn.onclick = ()=>{
+    const ini = inicioEl.value
+    const fin = finEl.value
+    if(!ini || !fin) return alert('Indica las fechas de inicio y fin del curso')
+    const dIni = new Date(ini+'T00:00:00')
+    const dFin = new Date(fin+'T00:00:00')
+    if(dFin < dIni) return alert('La fecha fin debe ser posterior a la de inicio')
+    if(modulos.length===0) return alert('Añade al menos un módulo')
+    const {rows, stats} = generateRows(dIni, dFin, new Map(festivos), new Map(evaluaciones), modulos)
+    tbody.innerHTML=''
+    rows.forEach(r=>{
+      const tr = document.createElement('tr')
+      if(r.tipo==='festivo' || r.tipo==='eval') tr.classList.add('holiday')
+      tr.innerHTML = `<td>${r.fecha}</td><td>${r.dia}</td><td>${escapeHtml(r.modulo)}</td><td>${r.inicio}</td><td>${r.fin}</td><td>${r.horas}</td><td>${escapeHtml(r.obs)}</td>`
+      tbody.appendChild(tr)
+    })
+    meta.textContent = `${stats.diasTotales} días · ${stats.totSes} sesiones · ${stats.totalHoras.toFixed(2)} horas · Festivos: ${stats.countFestivos} · Evaluaciones: ${stats.totEval}`
+    salida.style.display = 'block'
+  }
+
+  // ======= EXPORT: CSV =======
+  function buildCSVFromTable(sep=';'){
+    const headers = Array.from(tabla.querySelectorAll('thead th')).map(th=>th.textContent.trim())
+    const bodyRows = Array.from(tbody.querySelectorAll('tr')).map(tr=>Array.from(tr.children).map(td=>td.textContent))
+    const rows = [headers, ...bodyRows]
+    const esc = s => '"' + String(s).replace(/"/g,'""') + '"'
+    const CRLF = '\r\n'
+    return 'sep=' + sep + CRLF + rows.map(r=>r.map(esc).join(sep)).join(CRLF)
+  }
+  function exportCSVFromTable(){
+    if(!tbody.children.length) return alert('Primero genera el calendario')
+    const csv = buildCSVFromTable(';')
+    const blob = new Blob(['\uFEFF' + csv], {type:'text/csv;charset=utf-8'})
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Calendario_Docente.csv'; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove() }, 100)
+  }
+
+  // ======= EXPORT: XLSX 100% local (sin librerías) =======
+  function s2u8(str){ // UTF-8 encoder
+    const out=[]; for(let i=0;i<str.length;i++){ let c=str.charCodeAt(i); if(c<128){ out.push(c); } else if(c<2048){ out.push(192|(c>>6),128|(c&63)); } else if(c>=0xD800 && c<=0xDBFF){ // surrogate pair
+        const c2=str.charCodeAt(++i); const cp=((c-0xD800)<<10)+(c2-0xDC00)+0x10000; out.push(240|(cp>>18),128|((cp>>12)&63),128|((cp>>6)&63),128|(cp&63));
+      } else { out.push(224|(c>>12),128|((c>>6)&63),128|(c&63)); } }
+    return new Uint8Array(out)
+  }
+  let CRC_TABLE=null
+  function crc32(u8){
+    if(!CRC_TABLE){ CRC_TABLE=new Uint32Array(256); for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++){ c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1) } CRC_TABLE[n]=c>>>0 } }
+    let c=0xFFFFFFFF; for(let i=0;i<u8.length;i++){ c = CRC_TABLE[(c ^ u8[i]) & 0xFF] ^ (c >>> 8) } return (c ^ 0xFFFFFFFF)>>>0
+  }
+  function u16(v){ return new Uint8Array([v&255,(v>>>8)&255]) }
+  function u32(v){ return new Uint8Array([v&255,(v>>>8)&255,(v>>>16)&255,(v>>>24)&255]) }
+  function concat(parts){ let len=0; parts.forEach(p=>len+=p.length); const out=new Uint8Array(len); let o=0; parts.forEach(p=>{ out.set(p,o); o+=p.length }); return out }
+
+  function makeZip(files){ // files: [{name, data:Uint8Array}]
+    const localParts=[]; const centralParts=[]; let offset=0
+    const encoder=s2u8
+    const dosTime=u16(0), dosDate=u16(0)
+    files.forEach(f=>{
+      const name=encoder(f.name)
+      const data=f.data
+      const crc=crc32(data)
+      const comp=data // store
+      const localHeader=concat([
+        u32(0x04034b50), u16(20), u16(0), u16(0), dosTime, dosDate, u32(crc), u32(comp.length), u32(data.length), u16(name.length), u16(0), name
+      ])
+      localParts.push(localHeader, comp)
+      const centralHeader=concat([
+        u32(0x02014b50), u16(20), u16(20), u16(0), u16(0), dosTime, dosDate, u32(crc), u32(comp.length), u32(data.length), u16(name.length), u16(0), u16(0), u16(0), u16(0), u32(0), u32(offset), name
+      ])
+      centralParts.push(centralHeader)
+      offset += localHeader.length + comp.length
+    })
+    const central=concat(centralParts)
+    const end=concat([
+      u32(0x06054b50), u16(0), u16(0), u16(files.length), u16(files.length), u32(central.length), u32(offset), u16(0)
+    ])
+    return new Blob([concat([...localParts, central, end])], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})
+  }
+
+  function colLetter(n){ // 0->A
+    let s=''; n++; while(n>0){ const m=(n-1)%26; s=String.fromCharCode(65+m)+s; n=Math.floor((n-1)/26) } return s
+  }
+  function escXml(text){ return String(text).replace(/[&<>]/g, ch=> ch==='&'?'&amp;':(ch==='<'?'&lt;':'&gt;')) }
+
+  function buildWorksheetXML(matrix){
+    let rowsXml=''
+    for(let r=0;r<matrix.length;r++){
+      let cells=''
+      for(let c=0;c<matrix[r].length;c++){
+        const v = matrix[r][c]==null? '': String(matrix[r][c])
+        const ref = colLetter(c) + (r+1)
+        if(v==='') cells += `<c r="${ref}"/>`
+        else cells += `<c r="${ref}" t="inlineStr"><is><t>${escXml(v)}</t></is></c>`
+      }
+      rowsXml += `<row r="${r+1}">${cells}</row>`
+    }
+    return `<?xml version="1.0" encoding="UTF-8"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>${rowsXml}</sheetData></worksheet>`
+  }
+
+  function buildWorkbookXML(){
+    return `<?xml version="1.0" encoding="UTF-8"?>\n<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Calendario" sheetId="1" r:id="rId1"/></sheets></workbook>`
+  }
+  function buildWorkbookRels(){
+    return `<?xml version="1.0" encoding="UTF-8"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>`
+  }
+  function buildRootRels(){
+    return `<?xml version="1.0" encoding="UTF-8"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/></Relationships>`
+  }
+  function buildContentTypes(){
+    return `<?xml version="1.0" encoding="UTF-8"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/><Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/></Types>`
+  }
+  function buildCoreProps(){
+    const now = new Date().toISOString()
+    return `<?xml version="1.0" encoding="UTF-8"?>\n<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>Calendario Docente</dc:title><dc:creator>Generado</dc:creator><cp:lastModifiedBy>Generado</cp:lastModifiedBy><dcterms:created xsi:type="dcterms:W3CDTF">${now}</dcterms:created><dcterms:modified xsi:type="dcterms:W3CDTF">${now}</dcterms:modified></cp:coreProperties>`
+  }
+  function buildAppProps(){
+    return `<?xml version="1.0" encoding="UTF-8"?>\n<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"><Application>Microsoft Excel</Application></Properties>`
+  }
+
+  function exportXLSXFromTable(){
+    if(!tbody.children.length) return alert('Primero genera el calendario')
+    const headers = Array.from(tabla.querySelectorAll('thead th')).map(th=>th.textContent.trim())
+    const bodyRows = Array.from(tbody.querySelectorAll('tr')).map(tr=>Array.from(tr.children).map(td=>td.textContent))
+    const matrix = [headers, ...bodyRows]
+    const files = [
+      {name:'[Content_Types].xml', data:s2u8(buildContentTypes())},
+      {name:'_rels/.rels', data:s2u8(buildRootRels())},
+      {name:'docProps/core.xml', data:s2u8(buildCoreProps())},
+      {name:'docProps/app.xml', data:s2u8(buildAppProps())},
+      {name:'xl/workbook.xml', data:s2u8(buildWorkbookXML())},
+      {name:'xl/_rels/workbook.xml.rels', data:s2u8(buildWorkbookRels())},
+      {name:'xl/worksheets/sheet1.xml', data:s2u8(buildWorksheetXML(matrix))}
+    ]
+    const blob = makeZip(files)
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Calendario_Docente.xlsx'; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove() }, 100)
+  }
+
+  // Botones export
+  descargarXLSXBtn.onclick = exportXLSXFromTable
+  descargarCSVBtn.onclick = exportCSVFromTable
+  copiarHTMLBtn.onclick = async ()=>{ try{ await navigator.clipboard.writeText(tabla.outerHTML); alert('HTML de la tabla copiado al portapapeles') }catch(e){ alert('No se pudo copiar automáticamente. Selecciona y copia manualmente.') } }
+
+  // ======= Pruebas =======
+  function assert(name, condition){ const li=document.createElement('li'); li.innerHTML=(condition?'✅':'❌')+' '+name; li.className=condition?'test-pass':'test-fail'; testResults.appendChild(li); return condition }
+  function runTests(){
+    testResults.innerHTML=''
+    // CSV básico
+    (function(){
+      const headers=['A','B']; const rows=[["x","y"],["1","2"]]
+      const tableBackup = tabla.outerHTML
+      const temp=document.createElement('table'); temp.innerHTML=`<thead><tr><th>${headers[0]}</th><th>${headers[1]}</th></tr></thead><tbody>`+rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')+`</tbody>`
+      tabla.replaceWith(temp)
+      const csv=buildCSVFromTable(';')
+      const ok = csv.startsWith('sep=;\r\n') && csv.includes('"x";"y"')
+      assert('CSV genera cabecera y separador', ok)
+      temp.replaceWith((new DOMParser()).parseFromString(tableBackup,'text/html').body.firstChild)
+    })()
+    // XLSX genera ZIP válido (>1 KB)
+    (function(){
+      const blob = (function(){
+        const headers=['H1']; const rows=[["R1"],["R2"]]
+        const matrix=[headers,...rows]
+        const files=[
+          {name:'[Content_Types].xml', data:s2u8(buildContentTypes())},
+          {name:'_rels/.rels', data:s2u8(buildRootRels())},
+          {name:'docProps/core.xml', data:s2u8(buildCoreProps())},
+          {name:'docProps/app.xml', data:s2u8(buildAppProps())},
+          {name:'xl/workbook.xml', data:s2u8(buildWorkbookXML())},
+          {name:'xl/_rels/workbook.xml.rels', data:s2u8(buildWorkbookRels())},
+          {name:'xl/worksheets/sheet1.xml', data:s2u8(buildWorksheetXML(matrix))}
+        ]
+        return makeZip(files)
+      })()
+      assert('XLSX Blob generado', blob instanceof Blob && blob.size > 1000)
+    })()
+  }
+  runTestsBtn.onclick = runTests
+</script>
+</body>
+</html>
