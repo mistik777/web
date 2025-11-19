@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Analizador y Buscador de Webs</title>
+
+<style>
+    :root {
+        --bg: #f4f4f4;
+        --card: #ffffff;
+        --text: #222;
+        --muted: #666;
+        --radius: 16px;
+        --border: #e0e0e0;
+        --green: #4caf50;
+        --green-soft: #d9f7da;
+        --orange: #ffa726;
+        --orange-soft: #ffe4c4;
+    }
+
+    body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Segoe UI", sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+    }
+
+    /* CONTENEDOR RESPONSIVE */
+    .container {
+        width: 100%;
+        max-width: 900px;
+        padding: 18px;
+        box-sizing: border-box;
+    }
+
+    /* TÍTULO EN DOS FILAS */
+    .titulo-emojis {
+        text-align: center;
+        font-size: clamp(1.8rem, 8vw, 2.8rem);
+        margin-bottom: 4px;
+    }
+
+    .titulo-texto {
+        text-align: center;
+        font-size: clamp(1.2rem, 6vw, 2rem);
+        font-weight: 700;
+        margin-bottom: 22px;
+    }
+
+    /* TARJETAS */
+    .card {
+        background: var(--card);
+        padding: clamp(18px, 5vw, 26px);
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        margin-bottom: 22px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        box-sizing: border-box;
+    }
+
+    h3 {
+        font-size: clamp(1.1rem, 4.5vw, 1.4rem);
+        margin-bottom: 14px;
+        font-weight: 600;
+    }
+
+    textarea,
+    input[type="file"] {
+        width: 100%;
+        padding: clamp(12px, 3vw, 16px);
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        background: #fff;
+        font-size: clamp(1rem, 4vw, 1.15rem);
+        margin-bottom: 14px;
+        box-sizing: border-box;
+    }
+
+    textarea {
+        height: clamp(170px, 42vw, 260px);
+        resize: vertical;
+        font-family: "Consolas", monospace;
+    }
+
+    button {
+        padding: clamp(12px, 4vw, 18px);
+        border: none;
+        border-radius: var(--radius);
+        cursor: pointer;
+        width: 100%;
+        background: linear-gradient(90deg, #4caf50, #81c784);
+        color: #fff;
+        font-weight: 600;
+        font-size: clamp(1.05rem, 4.8vw, 1.3rem);
+        transition: 0.25s;
+        margin-top: 10px;
+    }
+
+    button:hover {
+        filter: brightness(1.08);
+        transform: translateY(-1px);
+    }
+
+    .valid {
+        background: var(--green-soft);
+        border-left: 6px solid var(--green);
+        padding: clamp(10px, 3vw, 16px);
+        border-radius: var(--radius);
+        margin: 6px 0;
+        font-size: clamp(1rem, 4vw, 1.2rem);
+        word-break: break-all;
+    }
+
+    .extra {
+        background: var(--orange-soft);
+        border-left: 6px solid var(--orange);
+        padding: clamp(10px, 3vw, 16px);
+        border-radius: var(--radius);
+        margin: 6px 0;
+        font-size: clamp(1rem, 4vw, 1.2rem);
+        word-break: break-all;
+    }
+
+    #progress-container {
+        width: 100%;
+        background: #dcdcdc;
+        border-radius: var(--radius);
+        margin: 25px 0;
+        height: 22px;
+        display:none;
+    }
+
+    #progress-bar {
+        width: 0%;
+        height: 100%;
+        background: linear-gradient(90deg, #4caf50, #81c784);
+        border-radius: var(--radius);
+        transition: width 0.3s ease;
+    }
+</style>
+
+</head>
+<body>
+<div class="container">
+
+<div class="titulo-emojis">🔎💻🫷🤖🙈</div>
+<div class="titulo-texto">Analizador y Buscador de webs</div>
+
+<div class="card">
+    <h3>1️⃣ Cargar fichero o pegar URLs</h3>
+    <input type="file" id="fileInput" accept=".txt,.csv">
+    <textarea id="textoInput" placeholder="1001juegos.com
+1v1.lol
+3kh0.github.io
+4399.com
+8ballpool.com
+abcya.com"></textarea>
+    <button id="btnProcesar">Procesar</button>
+</div>
+
+<div id="progress-container"><div id="progress-bar"></div></div>
+
+<div id="salida" class="card"></div>
+
+<div class="card">
+    <button id="btnDescargar" style="display:none">Descargar Resultado</button>
+    <button id="btnCopiar" style="display:none">Copiar al Portapapeles</button>
+</div>
+
+</div> <!-- FIN CONTAINER -->
+
+<script>
+/* ========= FUNCIONAMIENTO ORIGINAL (solo se corrige sintaxis) ========= */
+
+async function existe(url) {
+    const proxies = [
+        "https://api.allorigins.win/get?url=",
+        "https://api.allorigins.win/raw?url="
+    ];
+    for (let proxy of proxies) {
+        for (let proto of ["https://", "http://"]) {
+            try {
+                const r = await fetch(proxy + encodeURIComponent(proto + url));
+                if (r.status > 0) return true;
+            } catch {}
+        }
+    }
+    return false;
+}
+
+function descargar(nombre, contenido) {
+    const blob = new Blob([contenido], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = nombre;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function copiar(texto) {
+    navigator.clipboard.writeText(texto);
+    alert("Copiado al portapapeles");
+}
+
+function addHost(set, host) {
+    if (!host) return;
+    host = host.trim().toLowerCase();
+    host = host.replace(/^https?:\/\//, "").replace(/^www\./, "");
+    host = host.split("/")[0];
+    if (!host || host.includes(" ") || host.includes("..")) return;
+    set.add(host);
+}
+
+// ------- Generador de similares (modo juegos) -------
+function generarSimilaresJuegos(validas) {
+    let res = new Set();
+
+    const tlds = ["com","net","org","io","gg","fun","online","games","xyz","top","site","club"];
+
+    validas.forEach(url => {
+        let limpio = url.replace(/^https?:\/\//, "").replace(/^www\./, "");
+        let host = limpio.split("/")[0];
+        let parts = host.split(".");
+        if (parts.length < 2) return;
+
+        let nombre = parts[0];
+
+        // patrones genéricos
+        tlds.forEach(ext => {
+            addHost(res, nombre + "." + ext);
+            addHost(res, nombre + "game." + ext);
+            addHost(res, nombre + "games." + ext);
+            addHost(res, nombre + "online." + ext);
+            addHost(res, "play" + nombre + "." + ext);
+            addHost(res, "game" + nombre + "." + ext);
+            addHost(res, "games" + nombre + "." + ext);
+            addHost(res, nombre + "-game." + ext);
+            addHost(res, nombre + "-games." + ext);
+        });
+
+        // patrones específicos
+        if (nombre.includes("1001") || nombre === "1001juegos") {
+            ["com","net","org","top","online","fun"].forEach(ext => {
+                addHost(res, "1001juegos." + ext);
+                addHost(res, "1001games." + ext);
+                addHost(res, "juegos1001." + ext);
+            });
+        }
+
+        if (nombre === "1v1") {
+            ["com","net","gg"].forEach(ext => {
+                addHost(res, "1v1game." + ext);
+                addHost(res, "1v1games." + ext);
+                addHost(res, "play1v1." + ext);
+            });
+        }
+
+        if (nombre === "4399") {
+            addHost(res, "4399game.com");
+            addHost(res, "4399games.com");
+            addHost(res, "h5.4399.com");
+            addHost(res, "m.4399.com");
+        }
+
+        if (nombre === "abcya") {
+            ["com","net","fun"].forEach(ext => {
+                addHost(res, "abcya-games." + ext);
+                addHost(res, "playabcya." + ext);
+                addHost(res, "abcyaonline." + ext);
+            });
+        }
+
+        if (nombre === "8ballpool") {
+            ["com","net","games"].forEach(ext => {
+                addHost(res, "8ballpoolgame." + ext);
+                addHost(res, "8ballpoolonline." + ext);
+            });
+        }
+
+        if (nombre === "3kh0") {
+            addHost(res, "3kh0.com");
+            addHost(res, "3kh0.net");
+            addHost(res, "3kh0.org");
+            addHost(res, "3kh0games.github.io");
+        }
+    });
+
+    [
+        "agar.io","agar.live","agargame.io","agarz.com","agario.fun",
+        "slither.com","slither.io","diep.io",
+        "crazygames.com","minijuegos.com","poki.com",
+        "iogames.onl","iogames.space","iogames.games",
+        "iogameonline.com","iogamesio.com"
+    ].forEach(h => addHost(res, h));
+
+    return [...res];
+}
+
+function actualizarProgreso(actual, total) {
+    const c = document.getElementById("progress-container");
+    const b = document.getElementById("progress-bar");
+    c.style.display = "block";
+    b.style.width = total > 0 ? ((actual / total) * 100) + "%" : "0%";
+}
+
+// ------- Manejo del botón Procesar -------
+document.getElementById("btnProcesar").onclick = async () => {
+
+    const file = document.getElementById("fileInput").files[0];
+    let texto = file ? await file.text() : document.getElementById("textoInput").value.trim();
+
+    if (!texto) return alert("Pega URLs.");
+
+    let urls = texto.split("\n").map(x => x.trim()).filter(x => x);
+    urls = [...new Set(urls)];
+
+    document.getElementById("salida").innerHTML = "<h3>Procesando URLs originales...</h3>";
+
+    let validas = [];
+    let total = urls.length;
+    let i = 0;
+
+    for (const url of urls) {
+        if (await existe(url)) validas.push(url);
+        i++; actualizarProgreso(i,total);
+    }
+
+    let html = `<h3>2️⃣ URLs válidas – ${validas.length}</h3>`;
+    html += validas.map(v => `<div class='valid'>${v}</div>`).join("");
+    document.getElementById("salida").innerHTML = html;
+
+    document.getElementById("salida").innerHTML += "<h3>3️⃣ Buscando similares (modo juegos)...</h3>";
+
+    let candidatos = generarSimilaresJuegos(validas);
+
+    let validasLimpias = validas.map(v =>
+        v.replace(/^https?:\/\//,"").replace(/^www\./,"").split("/")[0]
+    );
+
+    let nuevos = candidatos.filter(c =>
+        !validasLimpias.includes(c.split("/")[0])
+    );
+
+    let definitivos = [];
+    let totalSim = nuevos.length; 
+    let j = 0;
+
+    for (const host of nuevos) {
+        const dominio = host.split("/")[0];
+        if (await existe(dominio)) definitivos.push(host);
+        j++; actualizarProgreso(j,totalSim);
+    }
+
+    definitivos = [...new Set(definitivos)].sort();
+
+    document.getElementById("salida").innerHTML += `
+        <h3>4️⃣ URLs similares – ${definitivos.length}</h3>
+        ${definitivos.map(v => `<div class='extra'>${v}</div>`).join("")}
+    `;
+
+    document.getElementById("btnDescargar").style.display = "inline-block";
+    document.getElementById("btnCopiar").style.display = "inline-block";
+
+    document.getElementById("btnDescargar").onclick = () =>
+        descargar("urls_finales.txt", [...validas, ...definitivos].join("\n"));
+
+    document.getElementById("btnCopiar").onclick = () =>
+        copiar([...validas, ...definitivos].join("\n"));
+};
+</script>
+
+</body>
+</html>
