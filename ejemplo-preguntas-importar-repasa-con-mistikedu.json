@@ -1,0 +1,22 @@
+[
+  {
+    "text": "¿Cuál es la capital de España?",
+    "options": ["Madrid", "Barcelona", "Valencia", "Sevilla"],
+    "correct": 0
+  },
+  {
+    "text": "¿Cuánto es 2 + 2?",
+    "options": ["3", "4", "5", "22"],
+    "correct": 1
+  },
+  {
+    "text": "¿Qué planeta es conocido como el Planeta Rojo?",
+    "options": ["Marte", "Venus", "Júpiter", "Mercurio"],
+    "correct": 0
+  },
+  {
+    "text": "¿Qué animal pone huevos?",
+    "options": ["Perro", "Gato", "Gallina", "Caballo"],
+    "correct": 2
+  }
+]
